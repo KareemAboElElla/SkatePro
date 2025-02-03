@@ -67,6 +67,8 @@ public:
 	virtual void GetUserInputs_Implementation(float& Forward, float& Right) override;
 	virtual void GetLegLocations_Implementation(FVector& FrontLeg, FVector& BackLeg) override;
 	virtual bool GetIsJumping_Implementation() override;
+	virtual void AddPoints_Implementation(int InPoints) override;
+	virtual int GetPoints_Implementation() override;
 
 protected:
 
@@ -103,11 +105,13 @@ public:
 
 	void AlignSkate();
 	void FlipSkate();
+	void UpdateSpeedEffect();
 
 	FVector WheelTrace(FName ScoketName);
 	FOnMontageBlendingOutStarted BlendingOutDelegate;
 	FOnMontageEnded MontageEndedDelegate;
 	bool IsJumping;
 	bool IsBoardFlipping;
+	int CurrentPoints;
 };
 

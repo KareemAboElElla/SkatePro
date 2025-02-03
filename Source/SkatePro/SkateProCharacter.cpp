@@ -10,8 +10,9 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
-#include "Kismet/BlueprintFunctionLibrary.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Kismet/GameplayStatics.h"
+#include "HUDs/MainGameplayHUD.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -38,10 +39,10 @@ ASkateProCharacter::ASkateProCharacter()
 	GetCharacterMovement()->AirControl = 0.35f;
 	GetCharacterMovement()->MaxWalkSpeed = 1200.f;
 	GetCharacterMovement()->MinAnalogWalkSpeed = 20.f;
-	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
-	GetCharacterMovement()->GroundFriction = 8.f;
+	GetCharacterMovement()->BrakingDecelerationWalking = 1000.f;
+	GetCharacterMovement()->GroundFriction = 4.f;
 	GetCharacterMovement()->BrakingDecelerationFalling = 1500.0f;
-	GetCharacterMovement()->MaxAcceleration = 1500;
+	GetCharacterMovement()->MaxAcceleration = 1500.f;
 	GetCharacterMovement()->GravityScale = 1.75;
 	// Create a camera boom (pulls in towards the player if there is a collision)
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
@@ -56,6 +57,7 @@ ASkateProCharacter::ASkateProCharacter()
 
 	SkateBoard = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("SkateBoard"));
 	SkateBoard->SetupAttachment(GetRootComponent());
+	CurrentPoints = 0;
 }
 
 void ASkateProCharacter::GetUserInputs_Implementation(float& Forward, float& Right)
@@ -82,11 +84,24 @@ bool ASkateProCharacter::GetIsJumping_Implementation()
 	return IsJumping;
 }
 
+void ASkateProCharacter::AddPoints_Implementation(int InPoints)
+{
+	CurrentPoints += InPoints;
+	if (AMainGameplayHUD* HUD = Cast<AMainGameplayHUD>(UGameplayStatics::GetPlayerController(this, 0)->GetHUD()))
+	{
+		HUD->UpdateScorePoints(CurrentPoints);
+	}
+}
+
+int ASkateProCharacter::GetPoints_Implementation()
+{
+	return CurrentPoints;
+}
+
 void ASkateProCharacter::BeginPlay()
 {
 	// Call the base class  
 	Super::BeginPlay();
-	//SetupPlayerInputComponent();
 }
 
 void ASkateProCharacter::Tick(float DeltaTime)
@@ -99,6 +114,7 @@ void ASkateProCharacter::Tick(float DeltaTime)
 		{
 			FlipSkate();
 		}
+		UpdateSpeedEffect();
 	}
 }
 
@@ -180,6 +196,12 @@ void ASkateProCharacter::FlipSkate()
 	}
 }
 
+void ASkateProCharacter::UpdateSpeedEffect()
+{
+	float speedRatio = GetVelocity().Length() / GetCharacterMovement()->MaxWalkSpeed;
+	FollowCamera->SetFieldOfView(FMath::Lerp(90.f, 120.f, speedRatio));
+}
+
 FVector ASkateProCharacter::WheelTrace(FName SocketName)
 {
 	const FVector SocketLocation = SkateBoard->GetSocketLocation(SocketName);
@@ -251,7 +273,7 @@ void ASkateProCharacter::Move(const FInputActionValue& Value)
 		const FVector BoardRightDirection = SkateBoard->GetRightVector();
 		const FVector BoardFrontDirection = SkateBoard->GetForwardVector();
 		
-		float Scaler = BoardFrontDirection.Z*10;
+		float Scaler = BoardFrontDirection.Z*3;
 		Scaler = FMath::Clamp(Scaler, -0.5f,0.5f);
 		
 		// add movement 

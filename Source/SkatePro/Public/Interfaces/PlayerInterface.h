@@ -31,4 +31,10 @@ public:
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
 	bool GetIsJumping();
+
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
+	void AddPoints(int InPoints);
+
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
+	int GetPoints();
 };

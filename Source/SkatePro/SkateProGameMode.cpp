@@ -3,6 +3,8 @@
 #include "SkateProGameMode.h"
 #include "SkateProCharacter.h"
 #include "UObject/ConstructorHelpers.h"
+#include "HUDs/MainGameplayHUD.h"
+
 
 ASkateProGameMode::ASkateProGameMode()
 {
